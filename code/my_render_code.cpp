@@ -7,6 +7,8 @@
 #include "GL_framework.h"
 
 
+float Traveling=0.f;
+float LifterTime = 5.0f;
 
 ///////// fw decl
 namespace ImGui {
@@ -88,14 +90,20 @@ void myCleanupCode() {
 	Cube::cleanupCube();
 }
 
-void myRenderCode(double currentTime) {
+void myRenderCode(double currentTime) 
+{
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	RV::_modelView = glm::mat4(1.f);
-	RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1], RV::panv[2]));
+	RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0] + Traveling, RV::panv[1], RV::panv[2]));
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[1], glm::vec3(1.f, 0.f, 0.f));
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[0], glm::vec3(0.f, 1.f, 0.f));
 
 	RV::_MVP = RV::_projection * RV::_modelView;
+
+	if (Traveling >= 10.f)
+		Traveling = 0.0f;
+	else
+	Traveling += 0.02f;
 
 	// render code
 	Box::drawCube();
@@ -489,8 +497,12 @@ void main() {\n\
 
 		glm::mat4 Mymatrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.f, 2.f, 0.f));
 		objMat = Mymatrix; //objMat es la matriz que pone el objeto dentro del mundo
-		glm::vec4 newColor = { 0.0f, 0.0f, 1.0f,1.0f };
+		glm::vec4 newColor = { 1.0f, 0.0f, 1.0f,1.0f };
 		Cube::updateColor(newColor);
+
+		glm::mat4 s = glm::scale(glm::mat4(1.0f), glm::vec3(1.f + (float)sin(currentime)-0.5f, 1.f + (float)sin(currentime)-0.5f, 1.f));
+		glm::mat4 t = glm::translate(glm::mat4(1.0f), glm::vec3(Traveling, 4.f, 1.f));
+		objMat = t*s; //objMat es la matriz que pone el objeto dentro del mundo
 
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
@@ -498,24 +510,36 @@ void main() {\n\
 		//glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.1f, 1.f, 1.f, 0.f);
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), myColor.r, myColor.g, myColor.b, myColor.a);
 
-		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);	
 
-		glm::vec3 vec = { 1.f + (float)currentime, 1.f, 1.f };
-		////glm::mat4 s = glm::scale(glm::mat4(1.0f), glm::vec3(1.f + (float)sin(currentime), 1.f + (float)sin(currentime), 1.f));
-		glm::mat4 r = glm::rotate(glm::mat4(1.0f), 4.f + (float)sin(currentime), glm::vec3(1.f + (float)sin(currentime), 1.f + (float)sin(currentime), 1.f));
-		///glm::mat4 t = glm::translate(glm::mat4(1.0f), glm::vec3(1.f + (float)sin(currentime), 1.f, 1.f));
-		glm::mat4 t = glm::translate(glm::mat4(1.0f), vec);
-		objMat = r*t; //objMat es la matriz que pone el objeto dentro del mundo
-
-		RV::_modelView = glm::lookAt({ 0.f,2.f,10.f }, vec, { 0.f,1.f,0.f });
-
-
-		glm::vec4 newColor1 = { 0.0f, 0.0f, 1.0f,1.0f };
+		//--------------------------------------------------------------------------------------------
+	
+		glm::vec4 newColor1 = { (float)sin(Traveling), (float)cos(Traveling), (float)sin(Traveling),1.0f };
 		Cube::updateColor(newColor1);
 
+		glm::mat4 tr = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 1.f, 0.f));
+		glm::mat4 r = glm::rotate(glm::mat4(1.0f), 5.f*float(sin(Traveling)), glm::vec3(0.f, 1.f, 0.f));
+		objMat = r*tr;
+
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), (float)sin(Traveling), 1.f, (float)sin(Traveling), 0.f);
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), myColor.r, myColor.g, myColor.b, myColor.a);
+
+
+		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+		//--------------------------------------------------------------------------------------------
+
+		glm::mat4 q = glm::scale(glm::mat4(1.0f), glm::vec3(0.7f, 2.f, 0.7f));
+		glm::mat4 y = glm::translate(glm::mat4(1.0f), glm::vec3(-7.f, 1.f, -5.f));
+		objMat = y*q; //objMat es la matriz que pone el objeto dentro del mundo
+
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
 		//glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.1f, 1.f, 1.f, 0.f);
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), myColor.r, myColor.g, myColor.b, myColor.a);
+
+		//---------------------------------------------------------------------------------------------
 
 		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
 
