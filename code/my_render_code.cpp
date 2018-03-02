@@ -104,7 +104,7 @@ void myRenderCode(double currentTime) {
 
 	//MyFirstShader::myRenderCode(currentTime);
 	//Cube::drawCube(); dibuja el cubo
-
+	//hola que hases
 	Cube::draw2Cubes(currentTime);
 	ImGui::Render();
 }
