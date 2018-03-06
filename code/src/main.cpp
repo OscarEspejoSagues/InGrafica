@@ -23,6 +23,7 @@ extern void GUI();
 extern void myInitCode(int width, int height);
 extern void myCleanupCode();
 extern void myRenderCode(double currentTime);
+extern void GLmousecb(MouseEvent ev);
 
 
 
@@ -124,14 +125,14 @@ int main(int argc, char** argv) {
 		
 		GUI();
 		//PhysicsUpdate((float)expected_frametime);
-		/*if(!io.WantCaptureMouse) {
+		if(!io.WantCaptureMouse) {
 			MouseEvent ev = {io.MousePos.x, io.MousePos.y, 
 				(io.MouseDown[0] ? MouseEvent::Button::Left : 
 				(io.MouseDown[1] ? MouseEvent::Button::Right :
 				(io.MouseDown[2] ? MouseEvent::Button::Middle :
 				MouseEvent::Button::None)))};
 			GLmousecb(ev);
-		}*/
+		}
 
 
 		double currentTime = (double)SDL_GetTicks() / 1000.0;
