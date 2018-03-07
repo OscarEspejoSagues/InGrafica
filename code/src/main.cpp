@@ -23,8 +23,14 @@ extern void GUI();
 extern void myInitCode(int width, int height);
 extern void myCleanupCode();
 extern void myRenderCode(double currentTime);
-extern void GLmousecb(MouseEvent ev);
 
+namespace SceneControl {
+	extern bool scene1 = false;
+	extern bool scene2 = false;
+
+	extern float Traveling = 0.f;
+	extern float LifterTime = 5.0f;
+}
 
 
 //////
@@ -107,16 +113,33 @@ int main(int argc, char** argv) {
 		SDL_Event eve;
 		while (SDL_PollEvent(&eve)) {
 			ImGui_ImplSdlGL3_ProcessEvent(&eve);
-			switch (eve.type) {
-			case SDL_WINDOWEVENT:
-				/*if (eve.window.event == SDL_WINDOWEVENT_RESIZED) {
+				switch (eve.type) {
+				case SDL_KEYDOWN:
+					switch (eve.key.keysym.sym)
+					{
+					case SDLK_1:
+						SceneControl::scene1 = true;
+						SceneControl::scene2 = false;
+						SceneControl::Traveling = 0.f;
+						SceneControl::LifterTime = 5.0f;
+						break;
+					case SDLK_2:
+						SceneControl::scene1 = false;
+						SceneControl::scene2 = true;
+						SceneControl::Traveling = 0.f;
+						SceneControl::LifterTime = 5.0f;
+						break;
+					}
+
+				case SDL_WINDOWEVENT:
+					/*if (eve.window.event == SDL_WINDOWEVENT_RESIZED) {
 					GLResize(eve.window.data1, eve.window.data2);
-				}*/
-				break;
-			case SDL_QUIT:
-				quit_app = true;
-				break;
-			}
+					}*/
+					break;
+				case SDL_QUIT:
+					quit_app = true;
+					break;
+				}
 		}
 		ImGui_ImplSdlGL3_NewFrame(mainwindow);
 
@@ -124,15 +147,15 @@ int main(int argc, char** argv) {
 		
 		
 		GUI();
-		//PhysicsUpdate((float)expected_frametime);
-		if(!io.WantCaptureMouse) {
-			MouseEvent ev = {io.MousePos.x, io.MousePos.y, 
-				(io.MouseDown[0] ? MouseEvent::Button::Left : 
-				(io.MouseDown[1] ? MouseEvent::Button::Right :
-				(io.MouseDown[2] ? MouseEvent::Button::Middle :
-				MouseEvent::Button::None)))};
-			GLmousecb(ev);
-		}
+		////PhysicsUpdate((float)expected_frametime);
+		//if(!io.WantCaptureMouse) {
+		//	MouseEvent ev = {io.MousePos.x, io.MousePos.y, 
+		//		(io.MouseDown[0] ? MouseEvent::Button::Left : 
+		//		(io.MouseDown[1] ? MouseEvent::Button::Right :
+		//		(io.MouseDown[2] ? MouseEvent::Button::Middle :
+		//		MouseEvent::Button::None)))};
+		//	GLmousecb(ev);
+		//}
 
 
 		double currentTime = (double)SDL_GetTicks() / 1000.0;
