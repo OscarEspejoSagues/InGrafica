@@ -46,6 +46,7 @@ namespace Cube {
 	///-----------------------Scenes
 	void Scene1(double currentime);//our first scene
 	void Scene2(double currentime);//our second scene
+	void Scene3(double currentime);//our third scene
 
 	void updateColor(const glm::vec4 newColor);
 	glm::vec4 myColor = { 0.0f, 0.3f, 1.4f, 1.0f };
@@ -216,6 +217,8 @@ void myRenderCode(double currentTime)
 		Cube::Scene1(currentTime);
 	if (SceneControl::scene2)
 		Cube::Scene2(currentTime);
+	if (SceneControl::scene3)
+		Cube::Scene3(currentTime);
 
 	ImGui::Render();
 }
@@ -859,6 +862,34 @@ void main() {\n\
 		glUseProgram(0);
 		glBindVertexArray(0);
 		glDisable(GL_PRIMITIVE_RESTART);
+	}
+
+	void Scene3(double currentime) {
+		glEnable(GL_PRIMITIVE_RESTART);
+		glBindVertexArray(cubeVao);
+		glUseProgram(cubeProgram);
+
+		glm::mat4 Mymatrix = glm::translate(glm::mat4(1.0f), glm::vec3(1.f, 2.f, 0.f));
+		objMat = Mymatrix;
+		glm::vec4 newColor = { 1.0f, 0.0f, 1.0f*sin(currentime),1.0f };
+		Cube::updateColor(newColor);
+
+		glm::mat4 t = glm::translate(glm::mat4(1.0f), glm::vec3(SceneControl::Traveling, 4.f, 1.f));
+		objMat = t;
+		if ((int)currentime % 3 == 1 || (int)currentime % 3 == 0 && (int)currentime != 0)
+		{
+			glm::mat4 r = glm::rotate(glm::mat4(1.0f), 20.f*float(sin(SceneControl::Traveling)), glm::vec3(0.f, 0.f, 1.f));
+			objMat = t * r;
+		}
+
+
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), myColor.r, myColor.g, myColor.b, myColor.a);
+
+		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+
 	}
 
 	void updateColor(const glm::vec4 newColor) {
