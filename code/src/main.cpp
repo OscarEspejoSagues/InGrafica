@@ -23,14 +23,9 @@ extern void GUI();
 extern void myInitCode(int width, int height);
 extern void myCleanupCode();
 extern void myRenderCode(double currentTime);
+extern void myKeyController(SDL_Event eve);
 
-namespace SceneControl {
-	extern bool scene1 = false;
-	extern bool scene2 = false;
 
-	extern float Traveling = 0.f;
-	extern float LifterTime = 5.0f;
-}
 
 
 //////
@@ -106,56 +101,30 @@ int main(int argc, char** argv) {
 	// Setup ImGui binding
 	ImGui_ImplSdlGL3_Init(mainwindow);
 
-
-
-	bool quit_app = false;
-	while (!quit_app) {
-		SDL_Event eve;
-		while (SDL_PollEvent(&eve)) {
-			ImGui_ImplSdlGL3_ProcessEvent(&eve);
+		bool quit_app = false;
+		while (!quit_app) {
+			SDL_Event eve;
+			while (SDL_PollEvent(&eve)) {
+				ImGui_ImplSdlGL3_ProcessEvent(&eve);
 				switch (eve.type) {
-				case SDL_KEYDOWN:
-					switch (eve.key.keysym.sym)
-					{
-					case SDLK_1:
-						SceneControl::scene1 = true;
-						SceneControl::scene2 = false;
-						SceneControl::Traveling = 0.f;
-						SceneControl::LifterTime = 5.0f;
-						break;
-					case SDLK_2:
-						SceneControl::scene1 = false;
-						SceneControl::scene2 = true;
-						SceneControl::Traveling = 0.f;
-						SceneControl::LifterTime = 5.0f;
-						break;
-					}
-
 				case SDL_WINDOWEVENT:
 					/*if (eve.window.event == SDL_WINDOWEVENT_RESIZED) {
-					GLResize(eve.window.data1, eve.window.data2);
+						GLResize(eve.window.data1, eve.window.data2);
 					}*/
 					break;
 				case SDL_QUIT:
 					quit_app = true;
 					break;
 				}
-		}
-		ImGui_ImplSdlGL3_NewFrame(mainwindow);
+				myKeyController(eve);
+			}
+			ImGui_ImplSdlGL3_NewFrame(mainwindow);
 
-		ImGuiIO& io = ImGui::GetIO();
-		
-		
-		GUI();
-		////PhysicsUpdate((float)expected_frametime);
-		//if(!io.WantCaptureMouse) {
-		//	MouseEvent ev = {io.MousePos.x, io.MousePos.y, 
-		//		(io.MouseDown[0] ? MouseEvent::Button::Left : 
-		//		(io.MouseDown[1] ? MouseEvent::Button::Right :
-		//		(io.MouseDown[2] ? MouseEvent::Button::Middle :
-		//		MouseEvent::Button::None)))};
-		//	GLmousecb(ev);
-		//}
+			ImGuiIO& io = ImGui::GetIO();
+			GUI();
+
+			
+
 
 
 		double currentTime = (double)SDL_GetTicks() / 1000.0;

@@ -4,19 +4,22 @@
 #include <cstdio>
 #include <cassert>
 #include <iostream>
-
+#include <SDL2\SDL.h>
 
 #include "GL_framework.h"
 
 float AOV = 65.f;
+int w, h;
 
 //Namespace that will control in witch scene we are
 namespace SceneControl {
-	extern bool scene1;
-	extern bool scene2;
+	 bool scene1 = false;
+	 bool scene2 = false;
+	 bool scene2prt2 = false;
+	 bool scene3 = false;
 
-	extern float Traveling;
-	extern float LifterTime ;
+	 float Traveling = 0.f;
+	 float LifterTime = 5.0f;
 }
 
 ///////// fw decl
@@ -72,6 +75,37 @@ namespace RenderVars {
 }
 namespace RV = RenderVars;
 
+void myKeyController(SDL_Event eve) {
+	switch (eve.type) {
+	case SDL_KEYDOWN:
+		switch (eve.key.keysym.sym)
+		{
+		case SDLK_1:
+				SceneControl::scene1 = true;
+				SceneControl::scene2 = false;
+				SceneControl::scene3 = false;
+				SceneControl::Traveling = 0.f;
+				SceneControl::LifterTime = 5.0f;
+				break;
+		case SDLK_2:
+				SceneControl::scene1 = false;
+				SceneControl::scene2 = true;
+				SceneControl::scene3 = false;
+				SceneControl::Traveling = 0.f;
+				SceneControl::LifterTime = 5.0f;
+				break;
+		case SDLK_3:
+				SceneControl::scene1 = false;
+				SceneControl::scene2 = false;
+				SceneControl::scene3 = true;
+				SceneControl::Traveling = 0.f;
+				SceneControl::LifterTime = 5.0f;
+				break;
+		}
+	
+	}
+}
+
 
 void myInitCode(int width, int height) {
 	glViewport(0, 0, width, height);
@@ -80,11 +114,10 @@ void myInitCode(int width, int height) {
 	glDepthFunc(GL_LEQUAL);
 	glEnable(GL_DEPTH_TEST);
 	glEnable(GL_CULL_FACE);
-	/*
-	float aux = -50.f;*/
-	//RV::_projection = glm::ortho((float)-width/aux, (float)width / aux, (float) - height / aux, (float)height/aux, 0.1f, 100.f); //camara orthonormal
+	w = width;
+	h = height;
 
-	RV::_projection = glm::perspective(RV::FOV, (float)width / (float)height, RV::zNear, RV::zFar);
+
 
 	// Setup shaders & geometry
 	Box::setupCube();
@@ -103,17 +136,40 @@ void myCleanupCode() {
 
 void myRenderCode(double currentTime) 
 {
+	if (SceneControl::scene1) {
+		float aux = -50.f;
+		RV::_projection = glm::ortho((float)-w / aux, (float)w / aux, (float)h / aux, (float)-h / aux, 0.1f, 100.f); //camara orthonormal
+	}
+	else
+	{
+		RV::_projection = glm::perspective(RV::FOV, (float)w / (float)h, RV::zNear, RV::zFar);
+	}
 	glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 	RV::_modelView = glm::mat4(1.f);
 	RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1], RV::panv[2]));
-
 	if (SceneControl::scene1)
 		RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0] + SceneControl::Traveling, RV::panv[1]+5, RV::panv[2]+15));
-	if (SceneControl::scene2) {
-		AOV = 300.f;
-		RV::FOV = AOV;
-		RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1] + 5, (RV::panv[2] + 15) + SceneControl::Traveling));
+	if (SceneControl::scene2)
+		if (SceneControl::scene2prt2)
+		{
+			RV::FOV = glm::radians(90.f);
+			RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1] + 5, (RV::panv[2] + 15)));
+		}
+		else
+		{
+			RV::FOV = glm::radians(65.f);
+			RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1] + 5, (RV::panv[2] + 15) + SceneControl::Traveling*2));
+		}
+
+	if (SceneControl::scene1) {
+		float aux = -50.f;
+		RV::_projection = glm::ortho((float)-w / aux, (float)w / aux, (float)h / aux, (float)-h / aux, 0.1f, 100.f); //camara orthonormal
 	}
+	else
+	{
+		RV::_projection = glm::perspective(RV::FOV, (float)w / (float)h, RV::zNear, RV::zFar);
+	}
+
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[1], glm::vec3(1.f, 0.f, 0.f));
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[0], glm::vec3(0.f, 1.f, 0.f));
 
@@ -127,14 +183,35 @@ void myRenderCode(double currentTime)
 
 	//Cube::drawCube(); dibuja el cubo
 	
-	if (SceneControl::scene1 || SceneControl::scene2)
+	if (SceneControl::scene1)
 	{
 		if (SceneControl::Traveling >= 10.f)
 			SceneControl::Traveling = 0.0f;
 		else
 			SceneControl::Traveling += 0.02f;
 	}
-	
+	if (SceneControl::scene2)
+	{
+		if (SceneControl::Traveling >= 10.f && !SceneControl::scene2prt2) {
+			std::cout << "Parte 2" << std::endl;
+			SceneControl::Traveling = 0.0f;
+			SceneControl::scene2prt2 = true;
+		}
+		else
+			SceneControl::Traveling += 0.02f;
+	}
+	if (SceneControl::scene2prt2)
+	{
+		if (SceneControl::Traveling >= 10.f) {
+			std::cout << "Parte 1" << std::endl;
+			SceneControl::Traveling = 0.0f;
+			SceneControl::scene2 = true;
+			SceneControl::scene2prt2 = false;
+		}
+		else
+			SceneControl::Traveling += 0.02f;
+	}
+
 	if (SceneControl::scene1)
 		Cube::Scene1(currentTime);
 	if (SceneControl::scene2)
@@ -724,9 +801,10 @@ void main() {\n\
 		//--------------------------------------------------------------------------------------------
 		glm::vec4 colorback = { 1.0f*sin(currentime), 0.0f, 1.0f,1.0f };
 		Cube::updateColor(colorback);
-		glm::mat4 t9 = glm::translate(glm::mat4(1.0f), glm::vec3(1.f, 2.f, -60.f));
+		glm::mat4 t9 = glm::translate(glm::mat4(1.0f), glm::vec3(19.f, 2.f, -1.f));
 		glm::mat4 s = glm::scale(glm::mat4(1.0f), glm::vec3(3.f, 3.f, 1.f));
-		objMat = t9*s;
+		glm::mat4 r10 = glm::rotate(glm::mat4(1.0f), 20.f*float(sin(SceneControl::Traveling)), glm::vec3(0.f, 0.f, 1.f));
+		objMat = t9*s*r10;
 
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
@@ -735,6 +813,48 @@ void main() {\n\
 		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
 
 		//--------------------------------------------------------------------------------------------
+		Cube::updateColor(colorback);
+		glm::mat4 t10 = glm::translate(glm::mat4(1.0f), glm::vec3(-19.f, 2.f, -1.f));
+		glm::mat4 s2 = glm::scale(glm::mat4(1.0f), glm::vec3(3.f, 3.f, 1.f));
+		glm::mat4 r9 = glm::rotate(glm::mat4(1.0f), 20.f*float(sin(SceneControl::Traveling)), glm::vec3(0.f, 0.f, 1.f));
+		objMat = t10 * s2*r9;
+
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), myColor.r, myColor.g, myColor.b, myColor.a);
+		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+
+		//--------------------------------------------------------------------------------------------
+
+		Cube::updateColor(colorback);
+		glm::mat4 t11 = glm::translate(glm::mat4(1.0f), glm::vec3(-19.f, 6.f, -1.f));
+		glm::mat4 s3 = glm::scale(glm::mat4(1.0f), glm::vec3(3.f, 3.f, 1.f));
+		glm::mat4 r11 = glm::rotate(glm::mat4(1.0f), 20.f*float(sin(SceneControl::Traveling)), glm::vec3(0.f, 0.f, 1.f));
+		objMat = t11 * s3 *r11;
+
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), myColor.r, myColor.g, myColor.b, myColor.a);
+		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+
+		//--------------------------------------------------------------------------------------------
+
+		Cube::updateColor(colorback);
+		glm::mat4 t12 = glm::translate(glm::mat4(1.0f), glm::vec3(19.f, 6.f, -1.f));
+		glm::mat4 s4 = glm::scale(glm::mat4(1.0f), glm::vec3(3.f, 3.f, 1.f));
+		glm::mat4 r12 = glm::rotate(glm::mat4(1.0f), 20.f*float(sin(SceneControl::Traveling)), glm::vec3(0.f, 0.f, 1.f));
+		objMat = t12 * s4 *r12;
+
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), myColor.r, myColor.g, myColor.b, myColor.a);
+		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+
+		//--------------------------------------------------------------------------------------------
+
 
 		glUseProgram(0);
 		glBindVertexArray(0);
