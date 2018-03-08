@@ -10,6 +10,8 @@
 
 float AOV = 65.f;
 int w, h;
+float FOV_Augment=0.0f;
+int Do_Once = 0;
 
 //Namespace that will control in witch scene we are
 namespace SceneControl {
@@ -150,25 +152,40 @@ void myRenderCode(double currentTime)
 	RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1], RV::panv[2]));
 	if (SceneControl::scene1)
 		RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0] + SceneControl::Traveling, RV::panv[1]+5, RV::panv[2]+15));
+
+	if (SceneControl::scene1)
+	{
+		Do_Once = 0;
+		float aux = -50.f;
+		RV::_projection = glm::ortho((float)-w / aux, (float)w / aux, (float)h / aux, (float)-h / aux, 0.1f, 100.f); //camara orthonormal
+	}
+
 	if (SceneControl::scene2)
+	{
+		Do_Once = 0;
 		if (SceneControl::scene2prt2)
 		{
-			RV::FOV = glm::radians(90.f);
+			RV::FOV = glm::radians(65.f + FOV_Augment);
 			RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1] + 5, (RV::panv[2] + 15)));
+			FOV_Augment += 0.1f;
 		}
 		else
 		{
 			RV::FOV = glm::radians(65.f);
-			RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1] + 5, (RV::panv[2] + 15) + SceneControl::Traveling*2));
+			RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1] + 5, (RV::panv[2] + 15) + SceneControl::Traveling * 2));
 		}
-
-	if (SceneControl::scene1) {
-		float aux = -50.f;
-		RV::_projection = glm::ortho((float)-w / aux, (float)w / aux, (float)h / aux, (float)-h / aux, 0.1f, 100.f); //camara orthonormal
 	}
-	else
+
+	if (SceneControl::scene3)
 	{
-		RV::_projection = glm::perspective(RV::FOV, (float)w / (float)h, RV::zNear, RV::zFar);
+		if (Do_Once == 0)
+		{
+			FOV_Augment = 0.f;
+			Do_Once++;
+		}
+		FOV_Augment += 0.1f;
+		RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1] + 5, (RV::panv[2] + 15) + SceneControl::Traveling * 2));
+		RV::FOV = glm::radians(65.f + FOV_Augment);
 	}
 
 	RV::_modelView = glm::rotate(RV::_modelView, RV::rota[1], glm::vec3(1.f, 0.f, 0.f));
@@ -202,6 +219,18 @@ void myRenderCode(double currentTime)
 			SceneControl::Traveling += 0.02f;
 	}
 	if (SceneControl::scene2prt2)
+	{
+		if (SceneControl::Traveling >= 10.f) {
+			std::cout << "Parte 1" << std::endl;
+			SceneControl::Traveling = 0.0f;
+			SceneControl::scene2 = true;
+			SceneControl::scene2prt2 = false;
+		}
+		else
+			SceneControl::Traveling += 0.02f;
+	}
+
+	if (SceneControl::scene3)
 	{
 		if (SceneControl::Traveling >= 10.f) {
 			std::cout << "Parte 1" << std::endl;
@@ -644,9 +673,23 @@ void main() {\n\
 		//glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.1f, 1.f, 1.f, 0.f);
 		glUniform4f(glGetUniformLocation(cubeProgram, "color"), myColor.r, myColor.g, myColor.b, myColor.a);
 
+		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
 		//---------------------------------------------------------------------------------------------
 
-		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+		//glm::mat4 q = glm::scale(glm::mat4(1.0f), glm::vec3(0.7f, 2.f, 0.7f));
+		//glm::mat4 y = glm::translate(glm::mat4(1.0f), glm::vec3(-7.f, 1.f, -5.f));
+		//objMat = y * q; //objMat es la matriz que pone el objeto dentro del mundo
+
+		//glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
+		//glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
+		//glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
+		////glUniform4f(glGetUniformLocation(cubeProgram, "color"), 0.1f, 1.f, 1.f, 0.f);
+		//glUniform4f(glGetUniformLocation(cubeProgram, "color"), myColor.r, myColor.g, myColor.b, myColor.a);
+
+		//glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+
+
+		
 
 
 		glUseProgram(0);
@@ -874,14 +917,33 @@ void main() {\n\
 		glm::vec4 newColor = { 1.0f, 0.0f, 1.0f*sin(currentime),1.0f };
 		Cube::updateColor(newColor);
 
-		glm::mat4 t = glm::translate(glm::mat4(1.0f), glm::vec3(SceneControl::Traveling, 4.f, 1.f));
+		glm::mat4 t = glm::translate(glm::mat4(1.0f), glm::vec3(0.f, 4.f, 1.f));
 		objMat = t;
-		if ((int)currentime % 3 == 1 || (int)currentime % 3 == 0 && (int)currentime != 0)
-		{
-			glm::mat4 r = glm::rotate(glm::mat4(1.0f), 20.f*float(sin(SceneControl::Traveling)), glm::vec3(0.f, 0.f, 1.f));
-			objMat = t * r;
-		}
 
+
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), myColor.r, myColor.g, myColor.b, myColor.a);
+
+		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+
+		////////////////////////////////////////////
+		glm::mat4 y = glm::translate(glm::mat4(1.0f), glm::vec3(4.f, 4.f, -3.f));
+		glm::mat4 i = glm::scale(glm::mat4(1.0f), glm::vec3(1.f, 4.f, -1.f));
+		objMat = y*i;
+
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
+		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mvpMat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_MVP));
+		glUniform4f(glGetUniformLocation(cubeProgram, "color"), myColor.r, myColor.g, myColor.b, myColor.a);
+
+		glDrawElements(GL_TRIANGLE_STRIP, numVerts, GL_UNSIGNED_BYTE, 0);
+
+		////////////////////////////////////////////
+		glm::mat4 u = glm::translate(glm::mat4(1.0f), glm::vec3(-4.f, 4.f, -3.f));
+		glm::mat4 c = glm::scale(glm::mat4(1.0f), glm::vec3(1.f, 4.f, -1.f));
+		objMat = u*c;
 
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "objMat"), 1, GL_FALSE, glm::value_ptr(objMat));
 		glUniformMatrix4fv(glGetUniformLocation(cubeProgram, "mv_Mat"), 1, GL_FALSE, glm::value_ptr(RenderVars::_modelView));
