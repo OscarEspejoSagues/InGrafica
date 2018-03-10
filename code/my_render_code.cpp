@@ -185,16 +185,9 @@ void myRenderCode(double currentTime)
 
 		if (SceneControl::Traveling >= 4.7f)
 		{
-			if (TimerDolly >= 5.f)
-			{
-				FOV_Augment = 0.f;
-				TimerDolly = 0.f;
-			}
-			else
-			{
-				/*TimerDolly += (clock() - start) / (double)CLOCKS_PER_SEC;*/
-				std::cout << TimerDolly << std::endl;
-			}
+			RV::_modelView = glm::translate(RV::_modelView, glm::vec3(RV::panv[0], RV::panv[1] + 5, (RV::panv[2] + 15)));
+			SceneControl::Traveling = 0.f;
+			FOV_Augment = 0.f;
 		}
 		else
 		{
@@ -253,17 +246,6 @@ void myRenderCode(double currentTime)
 		
 		if (SceneControl::Traveling >= 5.0f) 
 		{
-			
-			if (TimerDolly >= 5.f)
-			{
-				SceneControl::Traveling = 0.0f;
-				FOV_Augment = 0.f;
-			}
-			else
-			{
-				TimerDolly += currentTime;
-			}
-
 			
 		}
 		else
