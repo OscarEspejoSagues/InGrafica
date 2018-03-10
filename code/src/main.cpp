@@ -128,9 +128,7 @@ int main(int argc, char** argv) {
 
 
 		double currentTime = (double)SDL_GetTicks() / 1000.0;
-		//GLrender(currentTime);
-		
-		//double currentTime = (double) SDL_GetTicks() / 1000.0;
+
 		myRenderCode(currentTime);
 		
 
