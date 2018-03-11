@@ -8,16 +8,7 @@
 #include "GL_framework.h"
 
 
-/*extern void PhysicsInit();
-extern void PhysicsUpdate(float dt);
-extern void PhysicsCleanup();*/
 extern void GUI();
-
-//extern void GLmousecb(MouseEvent ev);
-//extern void GLResize(int width, int height);
-//extern void GLinit(int width, int height);
-//extern void GLcleanup();
-//extern void GLrender(double currentTime);
 
 //nuestras definiciones
 extern void myInitCode(int width, int height);
@@ -90,9 +81,6 @@ int main(int argc, char** argv) {
 
 	int display_w, display_h;
 	SDL_GL_GetDrawableSize(mainwindow, &display_w, &display_h);
-	// Init scene
-	//GLinit(display_w, display_h); Init del profe
-	//PhysicsInit();
 
 	//Init desde nuestro render
 	myInitCode(display_w, display_h);
